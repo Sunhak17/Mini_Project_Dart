@@ -92,11 +92,13 @@ class Hospital {
       return 'Appointment not found';
     }
 
-    _appointments.remove(appointment);
-    appointment.doctor.appointments.remove(appointment);
-    appointment.patient.appointments.remove(appointment);
-    appointment.doctor.addAvailableTime(appointment.date);
+    if (appointment.status == AppointmentStatus.Cancelled) {
+      return 'Appointment is already cancelled';
+    }
+
+    // Mark as cancelled and restore doctor's availability
     appointment.markCancelled();
+    appointment.doctor.addAvailableTime(appointment.date);
 
     return null; // Success (no error)
   }

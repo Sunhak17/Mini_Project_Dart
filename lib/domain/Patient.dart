@@ -47,6 +47,37 @@ class Patient extends Person {
     return appointments.any((a) => a.date == time);
   }
 
+  // Method to add appointment internally (for loading from JSON)
+  void addAppointmentInternal(Appointment appointment) {
+    if (!appointments.contains(appointment)) {
+      appointments.add(appointment);
+    }
+  }
+
+  // Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'id': id,
+      'age': age,
+      'gender': gender,
+      'type': 'patient',
+      'medicalHistory': medicalHistory ?? [],
+    };
+  }
+
+  // Create from JSON
+  static Patient fromJson(Map<String, dynamic> json) {
+    return Patient(
+      name: json['name'],
+      id: json['id'],
+      age: json['age'],
+      gender: json['gender'],
+      medicalHistory: (json['medicalHistory'] as List<dynamic>?)?.cast<String>(),
+      appointments: [],
+    );
+  }
+
   @override
   String toString() {
     final historyCount = medicalHistory?.length ?? 0;

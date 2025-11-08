@@ -16,26 +16,47 @@ class HospitalRepository {
     required this.appointmentsFilePath,
   });
 
+  factory HospitalRepository.withDefaultPaths() {
+    return HospitalRepository(
+      doctorsFilePath: 'hospital_management_system/lib/data/doctors.json',
+      patientsFilePath: 'hospital_management_system/lib/data/patients.json',
+      appointmentsFilePath: 'hospital_management_system/lib/data/appointments.json',
+    );
+  }
+
+  /// Initialize hospital - load from file if exists, otherwise create empty
+  Future<Hospital> initialize() async {
+    if (hasSavedData()) {
+      return await loadHospital();
+    } else {
+      return Hospital(
+        patients: [],
+        doctors: [],
+        appointments: [],
+      );
+    }
+  }
+
   /// Save hospital data to separate JSON files
-  void saveHospital(Hospital hospital) {
+  Future<void> saveHospital(Hospital hospital) async {
     try {
       // Save doctors
       final doctorsFile = File(doctorsFilePath);
-      final doctorsData = hospital.doctors.map((d) => _doctorToJson(d)).toList();
-      JsonEncoder encoder = JsonEncoder.withIndent('  ');
-      doctorsFile.writeAsStringSync(encoder.convert(doctorsData));
+      final doctorsData = hospital.doctors.map((d) => d.toJson()).toList();
+      JsonEncoder encoder = const JsonEncoder.withIndent('  ');
+      await doctorsFile.writeAsString(encoder.convert(doctorsData));
       print('✓ Saved ${hospital.doctors.length} doctors');
 
       // Save patients
       final patientsFile = File(patientsFilePath);
-      final patientsData = hospital.patients.map((p) => _patientToJson(p)).toList();
-      patientsFile.writeAsStringSync(encoder.convert(patientsData));
+      final patientsData = hospital.patients.map((p) => p.toJson()).toList();
+      await patientsFile.writeAsString(encoder.convert(patientsData));
       print('✓ Saved ${hospital.patients.length} patients');
 
       // Save appointments
       final appointmentsFile = File(appointmentsFilePath);
-      final appointmentsData = hospital.appointments.map((a) => _appointmentToJson(a)).toList();
-      appointmentsFile.writeAsStringSync(encoder.convert(appointmentsData));
+      final appointmentsData = hospital.appointments.map((a) => a.toJson()).toList();
+      await appointmentsFile.writeAsString(encoder.convert(appointmentsData));
       print('✓ Saved ${hospital.appointments.length} appointments');
 
       print('Hospital data saved successfully!');
@@ -45,54 +66,16 @@ class HospitalRepository {
     }
   }
 
-  // JSON Mapping Methods
-  
-  /// Convert Doctor to JSON
-  Map<String, dynamic> _doctorToJson(Doctor doctor) {
-    return {
-      'name': doctor.name,
-      'id': doctor.id,
-      'age': doctor.age,
-      'gender': doctor.gender,
-      'type': 'doctor',
-      'availableTime': doctor.availableTime.map((dt) => dt.toIso8601String()).toList(),
-    };
-  }
-
-  /// Convert Patient to JSON
-  Map<String, dynamic> _patientToJson(Patient patient) {
-    return {
-      'name': patient.name,
-      'id': patient.id,
-      'age': patient.age,
-      'gender': patient.gender,
-      'type': 'patient',
-      'medicalHistory': patient.medicalHistory ?? [],
-    };
-  }
-
-  /// Convert Appointment to JSON
-  Map<String, dynamic> _appointmentToJson(Appointment appointment) {
-    return {
-      'id': appointment.id,
-      'patientId': appointment.patient.id,
-      'doctorId': appointment.doctor.id,
-      'date': appointment.date.toIso8601String(),
-      'notes': appointment.notes,
-      'status': appointment.status.toString().split('.').last,
-    };
-  }
-
   /// Load hospital data from separate JSON files
-  Hospital loadHospital() {
+  Future<Hospital> loadHospital() async {
     try {
       // Load doctors
       List<Doctor> doctors = [];
       final doctorsFile = File(doctorsFilePath);
       if (doctorsFile.existsSync()) {
-        final doctorsContent = doctorsFile.readAsStringSync();
+        final doctorsContent = await doctorsFile.readAsString();
         final doctorsJson = jsonDecode(doctorsContent) as List;
-        doctors = doctorsJson.map((json) => _doctorFromJson(json)).toList();
+        doctors = doctorsJson.map((json) => Doctor.fromJson(json)).toList();
         
         // Update doctor ID counter based on loaded data
         if (doctors.isNotEmpty) {
@@ -100,19 +83,15 @@ class HospitalRepository {
             Doctor.updateCounterFromId(doctor.id);
           }
         }
-        
-        print('✓ Loaded ${doctors.length} doctors');
-      } else {
-        print('No doctors file found');
       }
 
       // Load patients
       List<Patient> patients = [];
       final patientsFile = File(patientsFilePath);
       if (patientsFile.existsSync()) {
-        final patientsContent = patientsFile.readAsStringSync();
+        final patientsContent = await patientsFile.readAsString();
         final patientsJson = jsonDecode(patientsContent) as List;
-        patients = patientsJson.map((json) => _patientFromJson(json)).toList();
+        patients = patientsJson.map((json) => Patient.fromJson(json)).toList();
         
         // Update patient ID counter based on loaded data
         if (patients.isNotEmpty) {
@@ -120,28 +99,21 @@ class HospitalRepository {
             Patient.updateCounterFromId(patient.id);
           }
         }
-        
-        print('✓ Loaded ${patients.length} patients');
-      } else {
-        print('No patients file found');
       }
 
       // Load appointments
       List<Appointment> appointments = [];
       final appointmentsFile = File(appointmentsFilePath);
       if (appointmentsFile.existsSync()) {
-        final appointmentsContent = appointmentsFile.readAsStringSync();
+        final appointmentsContent = await appointmentsFile.readAsString();
         final appointmentsJson = jsonDecode(appointmentsContent) as List;
-        appointments = _loadAppointments(appointmentsJson, doctors, patients);
-        print('✓ Loaded ${appointments.length} appointments');
-      } else {
-        print('No appointments file found');
+        appointments = await _loadAppointments(appointmentsJson, doctors, patients);
       }
 
-      if (doctors.isEmpty && patients.isEmpty && appointments.isEmpty) {
-        print('No existing data found. Starting with empty hospital...');
-      } else {
-        print('Hospital data loaded successfully!');
+      // Rebuild appointment relationships
+      for (final appt in appointments) {
+        appt.doctor.addAppointmentInternal(appt);
+        appt.patient.addAppointmentInternal(appt);
       }
 
       return Hospital(
@@ -160,35 +132,9 @@ class HospitalRepository {
     }
   }
 
-  /// Create Doctor from JSON
-  Doctor _doctorFromJson(Map<String, dynamic> json) {
-    return Doctor(
-      name: json['name'],
-      id: json['id'],
-      gender: json['gender'],
-      appointments: [],
-      availableTime: (json['availableTime'] as List<dynamic>?)
-              ?.map((dt) => DateTime.parse(dt as String))
-              .toSet() ??
-          {},
-    );
-  }
-
-  /// Create Patient from JSON
-  Patient _patientFromJson(Map<String, dynamic> json) {
-    return Patient(
-      name: json['name'],
-      id: json['id'],
-      age: json['age'],
-      gender: json['gender'],
-      medicalHistory: (json['medicalHistory'] as List<dynamic>?)?.cast<String>(),
-      appointments: [],
-    );
-  }
-
   /// Load appointments from JSON with references to doctors and patients
-  List<Appointment> _loadAppointments(
-      List<dynamic> appointmentsJson, List<Doctor> doctors, List<Patient> patients) {
+  Future<List<Appointment>> _loadAppointments(
+      List<dynamic> appointmentsJson, List<Doctor> doctors, List<Patient> patients) async {
     List<Appointment> appointments = [];
 
     for (var json in appointmentsJson) {
@@ -203,30 +149,8 @@ class HospitalRepository {
         orElse: () => throw Exception('Patient not found: ${json['patientId']}'),
       );
 
-      // Create appointment with default status first
-      final appointment = Appointment(
-        patient: patient,
-        doctor: doctor,
-        date: DateTime.parse(json['date']),
-        notes: json['notes'] ?? '',
-      );
-
-      // Restore the ID
-      appointment.id = json['id'];
-
-      // Update status based on JSON
-      final statusStr = json['status'] as String;
-      if (statusStr == 'Completed') {
-        appointment.markCompleted();
-      } else if (statusStr == 'Cancelled') {
-        appointment.markCancelled();
-      }
-
-      // Add to doctor and patient appointment lists
-      doctor.appointments.add(appointment);
-      patient.appointments.add(appointment);
-
-      appointments.add(appointment);
+      // Use Appointment.fromJson
+      appointments.add(Appointment.fromJson(json, patient, doctor));
     }
 
     // Reset the counter to the highest ID + 1
@@ -252,25 +176,25 @@ class HospitalRepository {
   }
 
   /// Clear all saved data
-  void clearData() {
+  Future<void> clearData() async {
     try {
       int deletedCount = 0;
       
       final doctorsFile = File(doctorsFilePath);
       if (doctorsFile.existsSync()) {
-        doctorsFile.deleteSync();
+        await doctorsFile.delete();
         deletedCount++;
       }
       
       final patientsFile = File(patientsFilePath);
       if (patientsFile.existsSync()) {
-        patientsFile.deleteSync();
+        await patientsFile.delete();
         deletedCount++;
       }
       
       final appointmentsFile = File(appointmentsFilePath);
       if (appointmentsFile.existsSync()) {
-        appointmentsFile.deleteSync();
+        await appointmentsFile.delete();
         deletedCount++;
       }
       

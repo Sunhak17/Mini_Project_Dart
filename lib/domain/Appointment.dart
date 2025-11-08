@@ -49,6 +49,45 @@ class Appointment {
 
   bool isCancelled() => status == AppointmentStatus.Cancelled;
 
+  // Convert to JSON
+  Map<String, dynamic> toJson() {
+    // Format date without milliseconds: yyyy-MM-ddTHH:mm:ss
+    final isoString = date.toIso8601String();
+    final dateWithoutMillis = isoString.substring(0, 19);
+    
+    return {
+      'id': id,
+      'patientId': patient.id,
+      'doctorId': doctor.id,
+      'date': dateWithoutMillis,
+      'notes': notes,
+      'status': status.toString().split('.').last,
+    };
+  }
+
+  // Create from JSON
+  static Appointment fromJson(Map<String, dynamic> json, Patient patient, Doctor doctor) {
+    final appointment = Appointment(
+      patient: patient,
+      doctor: doctor,
+      date: DateTime.parse(json['date']),
+      notes: json['notes'] ?? '',
+    );
+    
+    // Restore the ID
+    appointment.id = json['id'];
+    
+    // Restore status
+    final statusStr = json['status'] as String;
+    if (statusStr == 'Completed') {
+      appointment.status = AppointmentStatus.Completed;
+    } else if (statusStr == 'Cancelled') {
+      appointment.status = AppointmentStatus.Cancelled;
+    }
+    
+    return appointment;
+  }
+
   @override
   String toString() {
     final statusStr = status.toString().split('.').last;

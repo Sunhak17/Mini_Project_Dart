@@ -58,6 +58,44 @@ class Doctor extends Person {
     return _availableTime.contains(time);
   }
 
+  // Method to add appointment internally (for loading from JSON)
+  void addAppointmentInternal(Appointment appointment) {
+    if (!appointments.contains(appointment)) {
+      appointments.add(appointment);
+    }
+  }
+
+  // Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'id': id,
+      'age': age,
+      'gender': gender,
+      'type': 'doctor',
+      'availableTime': _availableTime.map((dt) {
+        // Format without milliseconds: yyyy-MM-ddTHH:mm:ss
+        final isoString = dt.toIso8601String();
+        return isoString.substring(0, 19); // Remove .000 and everything after
+      }).toList(),
+    };
+  }
+
+  // Create from JSON
+  static Doctor fromJson(Map<String, dynamic> json) {
+    return Doctor(
+      name: json['name'],
+      id: json['id'],
+      age: json['age'] ?? 45,
+      gender: json['gender'],
+      appointments: [],
+      availableTime: (json['availableTime'] as List<dynamic>?)
+              ?.map((dt) => DateTime.parse(dt as String))
+              .toSet() ??
+          {},
+    );
+  }
+
   @override
   String toString() {
     final appointmentCount = appointments.length;

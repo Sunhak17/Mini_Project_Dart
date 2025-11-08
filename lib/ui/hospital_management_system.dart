@@ -21,26 +21,48 @@ class HospitalManagementUI {
 
       switch (choice) {
         case '1':
-          _managePatients();
+          _listMenu();
           break;
         case '2':
-          _manageDoctors();
+          _managePatients();
           break;
         case '3':
-          _manageAppointments();
+          _manageDoctors();
           break;
         case '4':
-          _viewReports();
+          _manageAppointments();
           break;
         case '5':
-          saveData();
+          _viewReports();
           break;
-        case '6':
-          loadData();
-          break;
-        case '7':
+        case '0':
           exitProgram();
           return;
+        default:
+          print('Invalid option. Please try again.');
+      }
+    }
+  }
+
+  void _listMenu() {
+    while (true) {
+      print('\n--- List ---');
+      print('1) List All Patients');
+      print('2) List All Doctors');
+      print('3) Back to Main Menu');
+      stdout.write('Choose an option: ');
+      
+      final choice = stdin.readLineSync()?.trim();
+      
+      switch (choice) {
+        case '1':
+          listPatients();
+          break;
+        case '2':
+          listDoctors();
+          break;
+        case '3':
+          return; // Back to main menu
         default:
           print('Invalid option. Please try again.');
       }
@@ -110,7 +132,8 @@ class HospitalManagementUI {
       print('\n--- Appointment Management ---');
       print('1) Schedule New Appointment');
       print('2) Cancel Appointment');
-      print('3) Back to Main Menu');
+      print('3) Mark Appointment as Completed');
+      print('4) Back to Main Menu');
       stdout.write('Choose an option: ');
       
       final choice = stdin.readLineSync()?.trim();
@@ -123,6 +146,9 @@ class HospitalManagementUI {
           cancelAppointment();
           break;
         case '3':
+          markAppointmentAsCompleted();
+          break;
+        case '4':
           return; // Back to main menu
         default:
           print('Invalid option. Please try again.');
@@ -132,7 +158,7 @@ class HospitalManagementUI {
 
   void _viewReports() {
     while (true) {
-      print('\n--- View Reports ---');
+      print('\n--- View Appointment ---');
       print('1) View All Appointments');
       print('2) View Doctor Appointments');
       print('3) View Patient Appointments');
@@ -159,6 +185,33 @@ class HospitalManagementUI {
     }
   }
 
+  void listPatients() {
+    print('\n--- All Patients ---');
+    if (hospital.patients.isEmpty) {
+      print('No patients found.');
+      return;
+    }
+    
+    for (var i = 0; i < hospital.patients.length; i++) {
+      final p = hospital.patients[i];
+      print('\n[${i + 1}] ${p.name}');
+      print('    ID: ${p.id}');
+      print('    Age: ${p.age}');
+      print('    Gender: ${p.gender}');
+      
+      if (p.medicalHistory != null && p.medicalHistory!.isNotEmpty) {
+        print('    Medical History:');
+        for (final note in p.medicalHistory!) {
+          print('      - $note');
+        }
+      }
+      
+      if (p.appointments.isNotEmpty) {
+        print('    Appointments: ${p.appointments.length}');
+      }
+    }
+  }
+
   void addPatient() {
     stdout.write('Enter patient name: ');
     String name = stdin.readLineSync()!;
@@ -180,8 +233,40 @@ class HospitalManagementUI {
     final added = hospital.addPatient(patient);
     if (added) {
       print('Patient added successfully! ID: ${patient.id}');
+      print('Saving changes...');
+      saveData();
     } else {
       print('Patient with this ID already exists.');
+    }
+  }
+
+  void listDoctors() {
+    print('\n--- All Doctors ---');
+    if (hospital.doctors.isEmpty) {
+      print('No doctors found.');
+      return;
+    }
+    
+    for (var i = 0; i < hospital.doctors.length; i++) {
+      final d = hospital.doctors[i];
+      print('\n[${i + 1}] Dr. ${d.name}');
+      print('    ID: ${d.id}');
+      print('    Age: ${d.age}');
+      print('    Gender: ${d.gender}');
+      
+      if (d.availableTime.isEmpty) {
+        print('    No available time slots.');
+      } else {
+        print('    Available Time Slots:');
+        final slots = d.availableTime.toList()..sort();
+        for (final slot in slots) {
+          print('      - ${formatter.format(slot)}');
+        }
+      }
+      
+      if (d.appointments.isNotEmpty) {
+        print('    Appointments: ${d.appointments.length}');
+      }
     }
   }
 
@@ -202,6 +287,8 @@ class HospitalManagementUI {
     final added = hospital.addDoctor(doctor);
     if (added) {
       print('Doctor added successfully! ID: ${doctor.id}');
+      print('Saving changes...');
+      saveData();
     } else {
       print('Doctor with this ID already exists.');
     }
@@ -237,6 +324,11 @@ class HospitalManagementUI {
       }
 
       // Add all hours in the range
+      int addedCount = 0;
+      int duplicateCount = 0;
+      List<String> addedSlots = [];
+      List<String> duplicateSlots = [];
+      
       for (int hour = startHour; hour < endHour; hour++) {
         DateTime slot = DateTime(
           int.parse(dateParts[0]),
@@ -245,10 +337,27 @@ class HospitalManagementUI {
           hour,
           0,
         );
-        doctor.addAvailableTime(slot);
+        bool added = doctor.addAvailableTime(slot);
+        if (added) {
+          addedCount++;
+          addedSlots.add('${hour.toString().padLeft(2, '0')}:00');
+        } else {
+          duplicateCount++;
+          duplicateSlots.add('${hour.toString().padLeft(2, '0')}:00');
+        }
       }
 
-      print('Available time added: $dateStr from $startHour:00 to $endHour:00');
+      print('\n Available time slots processed:');
+      print('  Date: $dateStr');
+      print('  Time range: $startHour:00 to $endHour:00');
+      print('  Added: $addedCount slot(s) ${addedSlots.isNotEmpty ? addedSlots.join(', ') : ''}');
+      if (duplicateCount > 0) {
+        print('  Skipped (already exists): $duplicateCount slot(s) ${duplicateSlots.join(', ')}');
+      }
+      
+      // Auto-save to persist changes
+      print('\nSaving changes...');
+      saveData();
     } catch (e) {
       print('Invalid date/time format!');
     }
@@ -266,6 +375,8 @@ class HospitalManagementUI {
       return;
     }
 
+    print('\nPatient: ${patient.name} (${patient.id})');
+
     stdout.write('Enter doctor ID: ');
     String doctorId = stdin.readLineSync()!;
 
@@ -277,7 +388,20 @@ class HospitalManagementUI {
       return;
     }
 
-    stdout.write('Enter date (yyyy-MM-dd): ');
+    // Show doctor's available time slots
+    print('\n--- Dr. ${doctor.name} (${doctor.id}) ---');
+    if (doctor.availableTime.isEmpty) {
+      print('⚠ No available time slots for this doctor.');
+      return;
+    }
+    
+    print('Available Time Slots:');
+    final sortedSlots = doctor.availableTime.toList()..sort();
+    for (var i = 0; i < sortedSlots.length; i++) {
+      print('  [${i + 1}] ${formatter.format(sortedSlots[i])}');
+    }
+
+    stdout.write('\nEnter date (yyyy-MM-dd): ');
     String dateStr = stdin.readLineSync()!;
 
     stdout.write('Enter time (HH:mm in 24-hour format): ');
@@ -301,6 +425,8 @@ class HospitalManagementUI {
       final error = hospital.scheduleAppointment(patient, doctor, appointmentTime, notes);
       if (error == null) {
         print('Appointment scheduled successfully.');
+        print('Saving changes...');
+        saveData();
       } else {
         print('Could not schedule appointment: $error');
       }
@@ -326,9 +452,41 @@ class HospitalManagementUI {
     final error = hospital.cancelAppointment(appointment);
     if (error == null) {
       print('Appointment cancelled successfully.');
+      print('Saving changes...');
+      saveData();
     } else {
       print('Could not cancel appointment: $error');
     }
+  }
+
+  void markAppointmentAsCompleted() {
+    _printAllAppointments();
+
+    stdout.write('Enter appointment ID to mark as completed: ');
+    String appointmentId = stdin.readLineSync()!;
+
+    Appointment? appointment;
+    try {
+      appointment = hospital.appointments.firstWhere((a) => a.id == appointmentId);
+    } catch (e) {
+      print('Appointment not found!');
+      return;
+    }
+
+    if (appointment.status == AppointmentStatus.Completed) {
+      print('This appointment is already marked as completed.');
+      return;
+    }
+
+    if (appointment.status == AppointmentStatus.Cancelled) {
+      print('Cannot mark a cancelled appointment as completed.');
+      return;
+    }
+
+    appointment.markCompleted();
+    print('Appointment marked as completed successfully.');
+    print('Saving changes...');
+    saveData();
   }
 
   void viewDoctorAppointments() {
@@ -393,6 +551,8 @@ class HospitalManagementUI {
     final ok = patient.addMedicalHistory(note);
     if (ok) {
       print('Medical note added.');
+      print('Saving changes...');
+      saveData();
     } else {
       print('Invalid note. Nothing was added.');
     }
@@ -402,13 +562,12 @@ class HospitalManagementUI {
     print('\n╔════════════════════════════════════════╗');
     print('║   Hospital Management System           ║');
     print('╚════════════════════════════════════════╝');
-    print('1) Patient Management');
-    print('2) Doctor Management');
-    print('3) Appointment Management');
-    print('4) View Appointment');
-    print('5) Save Data');
-    print('6) Load Data');
-    print('7) Exit');
+    print('1) List');
+    print('2) Patient Management');
+    print('3) Doctor Management');
+    print('4) Appointment Management');
+    print('5) View Appointment');
+    print('0) Exit');
     print('─────────────────────────────────────────');
   }
 
@@ -429,15 +588,15 @@ class HospitalManagementUI {
     print('ID: ${a.id} | Patient: ${a.patient.name} (${a.patient.id}) | Doctor: ${a.doctor.name} (${a.doctor.id}) | Date: ${formatter.format(a.date)} | Status: $status | Notes: ${a.notes}');
   }
 
-  void saveData() {
+  Future<void> saveData() async {
     try {
-      repository.saveHospital(hospital);
+      await repository.saveHospital(hospital);
     } catch (e) {
       print('Error saving data: $e');
     }
   }
 
-  void loadData() {
+  Future<void> loadData() async {
     try {
       stdout.write('This will replace current data. Continue? (yes/no): ');
       String? confirm = stdin.readLineSync();
@@ -447,12 +606,11 @@ class HospitalManagementUI {
         return;
       }
 
-      final loadedHospital = repository.loadHospital();
+      final loadedHospital = await repository.loadHospital();
       
-      // Clear current hospital data using the clearAll method
+      
       hospital.clearAll();
       
-      // Add loaded data
       for (var patient in loadedHospital.patients) {
         hospital.addPatient(patient);
       }
@@ -470,13 +628,7 @@ class HospitalManagementUI {
   }
 
   void exitProgram() {
-    stdout.write('Do you want to save before exiting? (yes/no): ');
-    String? save = stdin.readLineSync();
-    
-    if (save?.toLowerCase() == 'yes') {
-      saveData();
-    }
-    
+    saveData();
     print('Thank you for using Hospital Management System.');
   }
 }

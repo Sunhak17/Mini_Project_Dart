@@ -248,8 +248,9 @@ void main() {
       
       hospital.cancelAppointment(appointment);
       
-      expect(patient.appointments.length, equals(0));
-      expect(doctor.appointments.length, equals(0));
+      expect(patient.appointments.length, equals(1));
+      expect(doctor.appointments.length, equals(1));
+      expect(appointment.status, equals(AppointmentStatus.Cancelled));
       expect(doctor.availableTime.contains(appointmentTime), isTrue);
     });
   });
