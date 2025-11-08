@@ -86,5 +86,13 @@
     "date": "2025-11-10T15:00:00",
     "notes": "Allergic",
     "status": "Scheduled"
+  },
+  {
+    "id": "12",
+    "patientId": "P006",
+    "doctorId": "D004",
+    "date": "2025-11-13T10:00:00",
+    "notes": "",
+    "status": "Scheduled"
   }
 ]

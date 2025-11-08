@@ -364,74 +364,51 @@ class HospitalManagementUI {
   }
 
   void scheduleAppointment() {
-    stdout.write('Enter patient ID: ');
-    String patientId = stdin.readLineSync()!;
-
-    Patient? patient;
-    try {
-      patient = hospital.patients.firstWhere((p) => p.id == patientId);
-    } catch (e) {
-      print('Patient not found!');
+    print('--- Schedule Appointment ---');
+    if (hospital.doctors.isEmpty || hospital.patients.isEmpty) {
+      print('Need at least one doctor and one patient.');
       return;
     }
 
-    print('\nPatient: ${patient.name} (${patient.id})');
+    final patient = _choose<Patient>(
+      hospital.patients,
+      'patient',
+      (p) => '${p.name} (id: ${p.id}, age: ${p.age}, gender: ${p.gender})',
+    );
 
-    stdout.write('Enter doctor ID: ');
-    String doctorId = stdin.readLineSync()!;
+    final doctor = _choose<Doctor>(
+      hospital.doctors,
+      'doctor',
+      (d) => '${d.name} (id: ${d.id}, age: ${d.age}, gender: ${d.gender})',
+    );
 
-    Doctor? doctor;
-    try {
-      doctor = hospital.doctors.firstWhere((d) => d.id == doctorId);
-    } catch (e) {
-      print('Doctor not found!');
-      return;
-    }
-
-    // Show doctor's available time slots
-    print('\n--- Dr. ${doctor.name} (${doctor.id}) ---');
+    // Display doctor's available time slots
+    _clear();
+    print('--- Available time slots for Dr. ${doctor.name} ---');
     if (doctor.availableTime.isEmpty) {
-      print('⚠ No available time slots for this doctor.');
+      print('No available slots for this doctor.');
       return;
     }
-    
-    print('Available Time Slots:');
+
+    final fmt = DateFormat('yyyy-MM-dd : hh:mm a');
     final sortedSlots = doctor.availableTime.toList()..sort();
     for (var i = 0; i < sortedSlots.length; i++) {
-      print('  [${i + 1}] ${formatter.format(sortedSlots[i])}');
+      print('[${i + 1}] ${fmt.format(sortedSlots[i])}');
     }
 
-    stdout.write('\nEnter date (yyyy-MM-dd): ');
-    String dateStr = stdin.readLineSync()!;
+    final slotIdx = _promptInt('Select time slot (number)', min: 1, max: sortedSlots.length) - 1;
+    final dateTime = sortedSlots[slotIdx];
 
-    stdout.write('Enter time (HH:mm in 24-hour format): ');
-    String timeStr = stdin.readLineSync()!;
+    final notes = _prompt('Notes (optional)');
 
-    stdout.write('Enter notes (optional): ');
-    String notes = stdin.readLineSync() ?? '';
-
-    try {
-      List<String> dateParts = dateStr.split('-');
-      List<String> timeParts = timeStr.split(':');
-
-      DateTime appointmentTime = DateTime(
-        int.parse(dateParts[0]),
-        int.parse(dateParts[1]),
-        int.parse(dateParts[2]),
-        int.parse(timeParts[0]),
-        int.parse(timeParts[1]),
-      );
-
-      final error = hospital.scheduleAppointment(patient, doctor, appointmentTime, notes);
-      if (error == null) {
-        print('Appointment scheduled successfully.');
-        print('Saving changes...');
-        saveData();
-      } else {
-        print('Could not schedule appointment: $error');
-      }
-    } catch (e) {
-      print('Invalid date/time format!');
+    // Let Hospital orchestrate the scheduling and side effects/prints.
+    final error = hospital.scheduleAppointment(patient, doctor, dateTime, notes);
+    if (error == null) {
+      print('Appointment scheduled successfully.');
+      print('Saving changes...');
+      saveData();
+    } else {
+      print('Could not schedule appointment: $error');
     }
   }
 
@@ -630,5 +607,51 @@ class HospitalManagementUI {
   void exitProgram() {
     saveData();
     print('Thank you for using Hospital Management System.');
+  }
+
+  // Helper methods for cleaner UI interactions
+  T _choose<T>(List<T> items, String itemType, String Function(T) display) {
+    print('\nAvailable ${itemType}s:');
+    for (var i = 0; i < items.length; i++) {
+      print('[${i + 1}] ${display(items[i])}');
+    }
+    final idx = _promptInt('Select $itemType (number)', min: 1, max: items.length) - 1;
+    return items[idx];
+  }
+
+  void _clear() {
+    // Add some spacing for better readability
+    print('\n');
+  }
+
+  int _promptInt(String message, {int? min, int? max}) {
+    while (true) {
+      stdout.write('$message: ');
+      final input = stdin.readLineSync()?.trim();
+      if (input == null || input.isEmpty) {
+        print('Invalid input. Please try again.');
+        continue;
+      }
+      
+      try {
+        final value = int.parse(input);
+        if (min != null && value < min) {
+          print('Value must be at least $min.');
+          continue;
+        }
+        if (max != null && value > max) {
+          print('Value must be at most $max.');
+          continue;
+        }
+        return value;
+      } catch (e) {
+        print('Invalid number. Please try again.');
+      }
+    }
+  }
+
+  String _prompt(String message) {
+    stdout.write('$message: ');
+    return stdin.readLineSync()?.trim() ?? '';
   }
 }
