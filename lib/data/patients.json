@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Sovann",
+    "id": "P001",
+    "age": 28,
+    "gender": "Female",
+    "type": "patient",
+    "medicalHistory": [
+      "Annual checkup - healthy"
+    ]
+  },
+  {
+    "name": "Robert",
+    "id": "P002",
+    "age": 45,
+    "gender": "Male",
+    "type": "patient",
+    "medicalHistory": [
+      "Hypertension",
+      "Regular blood pressure monitoring"
+    ]
+  },
+  {
+    "name": "Mei Lin Chen",
+    "id": "P003",
+    "age": 32,
+    "gender": "Female",
+    "type": "patient",
+    "medicalHistory": [
+      "Allergies to penicillin"
+    ]
+  },
+  {
+    "name": "Elon Musk",
+    "id": "P004",
+    "age": 55,
+    "gender": "Male",
+    "type": "patient",
+    "medicalHistory": [
+      "Type 2 Diabetes",
+      "Regular insulin treatment"
+    ]
+  },
+  {
+    "name": "Sakura Yamamoto",
+    "id": "P005",
+    "age": 24,
+    "gender": "Female",
+    "type": "patient",
+    "medicalHistory": []
+  },
+  {
+    "name": "Thomas Muller",
+    "id": "P006",
+    "age": 38,
+    "gender": "Male",
+    "type": "patient",
+    "medicalHistory": [
+      "Asthma - well controlled"
+    ]
+  },
+  {
+    "name": "Ashura",
+    "id": "P007",
+    "age": 29,
+    "gender": "Female",
+    "type": "patient",
+    "medicalHistory": [
+      "Migraine history"
+    ]
+  },
+  {
+    "name": "Jean Dupont",
+    "id": "P008",
+    "age": 62,
+    "gender": "Male",
+    "type": "patient",
+    "medicalHistory": [
+      "High cholesterol",
+      "Taking statins"
+    ]
+  },
+  {
+    "name": "Li Wei",
+    "id": "P009",
+    "age": 35,
+    "gender": "Male",
+    "type": "patient",
+    "medicalHistory": [
+      "Back pain - chronic"
+    ]
+  },
+  {
+    "name": "Anna",
+    "id": "P010",
+    "age": 41,
+    "gender": "Female",
+    "type": "patient",
+    "medicalHistory": [
+      "Thyroid disorder",
+      "Taking levothyroxine"
+    ]
+  },
+  {
+    "name": "Kelly",
+    "id": "P011",
+    "age": 15,
+    "gender": "Female",
+    "type": "patient",
+    "medicalHistory": [
+      "Allergic"
+    ]
+  }
+]

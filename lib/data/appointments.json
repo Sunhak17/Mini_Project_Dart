@@ -1,0 +1,90 @@
+[
+  {
+    "id": "1",
+    "patientId": "P001",
+    "doctorId": "D001",
+    "date": "2025-11-10T09:00:00",
+    "notes": "Annual physical examination",
+    "status": "Scheduled"
+  },
+  {
+    "id": "2",
+    "patientId": "P002",
+    "doctorId": "D002",
+    "date": "2025-11-10T11:00:00",
+    "notes": "Blood pressure checkup",
+    "status": "Scheduled"
+  },
+  {
+    "id": "3",
+    "patientId": "P003",
+    "doctorId": "D003",
+    "date": "2025-11-10T08:00:00",
+    "notes": "Allergy consultation",
+    "status": "Completed"
+  },
+  {
+    "id": "4",
+    "patientId": "P004",
+    "doctorId": "D004",
+    "date": "2025-11-11T08:00:00",
+    "notes": "Diabetes follow-up",
+    "status": "Scheduled"
+  },
+  {
+    "id": "5",
+    "patientId": "P005",
+    "doctorId": "D001",
+    "date": "2025-11-10T10:00:00",
+    "notes": "General consultation",
+    "status": "Scheduled"
+  },
+  {
+    "id": "6",
+    "patientId": "P006",
+    "doctorId": "D005",
+    "date": "2025-11-10T16:00:00",
+    "notes": "Asthma review",
+    "status": "Scheduled"
+  },
+  {
+    "id": "7",
+    "patientId": "P007",
+    "doctorId": "D002",
+    "date": "2025-11-10T13:00:00",
+    "notes": "Migraine treatment consultation",
+    "status": "Cancelled"
+  },
+  {
+    "id": "8",
+    "patientId": "P008",
+    "doctorId": "D003",
+    "date": "2025-11-10T15:00:00",
+    "notes": "Cholesterol level review",
+    "status": "Completed"
+  },
+  {
+    "id": "9",
+    "patientId": "P009",
+    "doctorId": "D004",
+    "date": "2025-11-11T13:00:00",
+    "notes": "Back pain therapy",
+    "status": "Scheduled"
+  },
+  {
+    "id": "10",
+    "patientId": "P011",
+    "doctorId": "D002",
+    "date": "2025-11-10T13:00:00",
+    "notes": "",
+    "status": "Cancelled"
+  },
+  {
+    "id": "11",
+    "patientId": "P002",
+    "doctorId": "D003",
+    "date": "2025-11-10T15:00:00",
+    "notes": "Allergic",
+    "status": "Scheduled"
+  }
+]
