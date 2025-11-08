@@ -51,18 +51,12 @@ dart run
 ```
 
 ### Menu Options
-1. **Add Patient** - Register a new patient
-2. **Add Doctor** - Register a new doctor
-3. **Add Doctor Available Time** - Set doctor's availability
-4. **Schedule Appointment** - Create new appointment
-5. **Cancel Appointment** - Cancel existing appointment
-6. **View All Appointments** - List all appointments
-7. **View Doctor Appointments** - View specific doctor's schedule
-8. **View Patient Appointments** - View specific patient's appointments
-9. **Add Patient Medical History** - Add medical notes
-10. **Save Data** - Manually save to JSON files
-11. **Load Data** - Reload data from JSON files
-12. **Exit** - Exit with optional save
+1. **List** - List Patients and Doctors
+2. **Patient Management** - Register a new Patient, Medical History and view appointment for patient
+3. **Doctor Management** - Register a new doctor, available time and view appointment for doctor
+4. **Schedule Appointment** - Create new appointment, Cancel and Complete status
+5. **View All Appointments** - List all appointments
+0. **Exit** - Exit with optional save
 
 ### Data Storage
 
